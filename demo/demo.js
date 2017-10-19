@@ -15,8 +15,10 @@ var uploadList      = document.querySelector("#upload-list");
 var chunkInput      = document.querySelector("#chunksize");
 var endpointInput   = document.querySelector("#endpoint");
 
+// alert(tus.isSupported);
+console.log("isSupported", tus.isSupported);
 if (!tus.isSupported) {
-  alertBox.classList.remove("hidden");
+  alertBox.removeAttribute("hidden");
 }
 
 if (!toggleBtn) {
@@ -24,9 +26,9 @@ if (!toggleBtn) {
 }
 
 upload = new tus.Upload(null, {
-  wsendpoint: "localhost:8084"
+  endpoint: "localhost:8084"
 });
-upload.startWSTest();
+// upload.startWSTest();
 
 
 toggleBtn.addEventListener("click", function (e) {
