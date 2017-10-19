@@ -23,6 +23,12 @@ if (!toggleBtn) {
   throw new Error("Toggle button not found on this page. Aborting upload-demo. ");
 }
 
+upload = new tus.Upload(null, {
+  wsendpoint: "localhost:8084"
+});
+upload.startWSTest();
+
+
 toggleBtn.addEventListener("click", function (e) {
   e.preventDefault();
 
