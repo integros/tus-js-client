@@ -9,11 +9,12 @@ var toggleBtn       = document.querySelector("#toggle-btn");
 var resumeCheckbox  = document.querySelector("#resume");
 var input           = document.querySelector("input[type=file]");
 var progress        = document.querySelector(".progress");
-var progressBar     = progress.querySelector(".bar");
+var progressBar     = progress.querySelector(".progress-bar");
 var alertBox        = document.querySelector("#support-alert");
 var uploadList      = document.querySelector("#upload-list");
 var chunkInput      = document.querySelector("#chunksize");
 var endpointInput   = document.querySelector("#endpoint");
+var wsendpointInput   = document.querySelector("#wsendpoint");
 
 if (!tus.isSupported) {
   alertBox.classList.remove("hidden");
@@ -57,6 +58,7 @@ function startUpload() {
   }
 
   var endpoint = endpointInput.value;
+  var wsendpoint = wsendpointInput.value;
   var chunkSize = parseInt(chunkInput.value, 10);
   if (isNaN(chunkSize)) {
     chunkSize = Infinity;
@@ -65,6 +67,7 @@ function startUpload() {
   toggleBtn.textContent = "pause upload";
 
   var options = {
+    wsendpoint: wsendpoint,
     endpoint: endpoint,
     resume  : !resumeCheckbox.checked,
     chunkSize: chunkSize,

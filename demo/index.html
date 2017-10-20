@@ -32,6 +32,16 @@
       </div>
       <div class="form-group row">
         <div class="col-4">
+          <label for="wsendpoint" class="col-form-label"> 
+            WebScoket upload wsendpoint:
+          </label>
+         </div>
+        <div class="col-4">
+          <input type="text" class="form-control form-control-sm" id="wsendpoint" name="wsendpoint" value="localhost:8084">
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-4">
           <label for="chunksize" class="col-form-label"> 
             Chunk size (bytes):
           </label>
@@ -62,7 +72,7 @@
       <div class="form-group row">
         <div class="col-8">
           <div class="progress">
-            <div class="progress-bar" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+            <div class="progress-bar" role="progressbar" style="width: 0" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
           </div>
         </div>
         <div class="col-4">

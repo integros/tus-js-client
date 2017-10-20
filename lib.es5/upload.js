@@ -44,6 +44,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var defaultOptions = {
   endpoint: "",
+  wsendpoint: "",
   fingerprint: _fingerprint2.default,
   resume: true,
   onProgress: null,
@@ -110,6 +111,11 @@ var Upload = function () {
 
       if (!file) {
         this._emitError(new Error("tus: no file or stream to upload provided"));
+        return;
+      }
+
+      if (!this.options.wsendpoint) {
+        this._emitError(new Error("tus: no wsendpoint provided"));
         return;
       }
 
@@ -311,6 +317,20 @@ var Upload = function () {
 
       xhr.withCredentials = this.options.withCredentials;
     }
+  }, {
+    key: "_setupXHR",
+    value: function _setupXHR(xhr) {
+      this._xhr = xhr;
+
+      xhr.setRequestHeader("Tus-Resumable", "1.0.0");
+      var headers = this.options.headers;
+
+      for (var name in headers) {
+        xhr.setRequestHeader(name, headers[name]);
+      }
+
+      xhr.withCredentials = this.options.withCredentials;
+    }
 
     /**
      * Create a new upload using the creation extension by sending a POST
@@ -325,16 +345,61 @@ var Upload = function () {
     value: function _createUpload() {
       var _this2 = this;
 
-      var xhr = (0, _request.newRequest)();
-      xhr.open("POST", this.options.endpoint, true);
+      var ws = new WebSocket("ws://" + this.options.wsendpoint + "/ws");
 
-      xhr.onload = function () {
-        if (!inStatusCategory(xhr.status, 200)) {
-          _this2._emitXhrError(xhr, new Error("tus: unexpected response while creating upload"));
+      ws.onopen = function () {
+        console.log("[WS Opened]");
+
+        var payload = {
+          method: "POST",
+          headers: {}
+        };
+
+        var headers = {
+          "Tus-Resumable": "1.0.0",
+          "Upload-Length": _this2._size
+        };
+
+        var metadata = encodeMetadata(_this2.options.metadata);
+        if (metadata !== "") {
+          headers["Upload-Metadata"] = metadata;
+        }
+
+        var optionHeaders = _this2.options.headers;
+        for (var name in optionHeaders) {
+          headers[name] = optionHeaders[name];
+        }
+
+        payload.headers = headers;
+        console.log("Create payload: ", payload);
+
+        ws.send(JSON.stringify(payload));
+      };
+
+      ws.onerror = function (event) {
+        console.log("[WS Error]", event);
+        // MUST _emitXhrError (_emitWsError)
+        _this2._emitError(new Error("tus: failed to create upload"));
+      };
+
+      ws.onclose = function (event) {
+        console.log("[WS Closed]", event);
+        // MUST _emitXhrError (_emitWsError)
+        _this2._emitError(new Error("tus: closed to create upload"));
+      };
+
+      ws.onmessage = function (message) {
+        var response = JSON.parse(message.data);
+
+        console.log("[WS Message]", response);
+
+        if (!inStatusCategory(response.status, 200)) {
+          // MUST _emitXhrError (_emitWsError)
+          _this2._emitError(new Error("tus: unexpected response while creating upload"));
           return;
         }
 
-        _this2.url = (0, _request.resolveUrl)(_this2.options.endpoint, xhr.getResponseHeader("Location"));
+        _this2.url = (0, _request.resolveUrl)(_this2.options.endpoint, response.headers["Location"]);
 
         if (_this2.options.resume) {
           Storage.setItem(_this2._fingerprint, _this2.url);
@@ -343,21 +408,6 @@ var Upload = function () {
         _this2._offset = 0;
         _this2._startUpload();
       };
-
-      xhr.onerror = function (err) {
-        _this2._emitXhrError(xhr, new Error("tus: failed to create upload"), err);
-      };
-
-      this._setupXHR(xhr);
-      xhr.setRequestHeader("Upload-Length", this._size);
-
-      // Add metadata if values have been added
-      var metadata = encodeMetadata(this.options.metadata);
-      if (metadata !== "") {
-        xhr.setRequestHeader("Upload-Metadata", metadata);
-      }
-
-      xhr.send(null);
     }
 
     /*
