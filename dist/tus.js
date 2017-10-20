@@ -7,8 +7,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.encode = encode;
 /* global: window */
 
-var _window = window;
-var btoa = _window.btoa;
+var _window = window,
+    btoa = _window.btoa;
 function encode(data) {
   return btoa(unescape(encodeURIComponent(data)));
 }
@@ -16,6 +16,104 @@ function encode(data) {
 var isSupported = exports.isSupported = "btoa" in window;
 
 },{}],2:[function(_dereq_,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var DetailedError = function (_Error) {
+  _inherits(DetailedError, _Error);
+
+  function DetailedError(error) {
+    var causingErr = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+    var xhr = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
+    _classCallCheck(this, DetailedError);
+
+    var _this = _possibleConstructorReturn(this, (DetailedError.__proto__ || Object.getPrototypeOf(DetailedError)).call(this, error.message));
+
+    _this.originalRequest = xhr;
+    _this.causingError = causingErr;
+
+    var message = error.message;
+    if (causingErr != null) {
+      message += ", caused by " + causingErr.toString();
+    }
+    if (xhr != null) {
+      message += ", originated from request (response code: " + xhr.status + ", response text: " + xhr.responseText + ")";
+    }
+    _this.message = message;
+    return _this;
+  }
+
+  return DetailedError;
+}(Error);
+
+exports.default = DetailedError;
+
+},{}],3:[function(_dereq_,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = fingerprint;
+/**
+ * Generate a fingerprint for a file which will be used the store the endpoint
+ *
+ * @param {File} file
+ * @return {String}
+ */
+function fingerprint(file) {
+  return ["tus", file.name, file.type, file.size, file.lastModified].join("-");
+}
+
+},{}],4:[function(_dereq_,module,exports){
+"use strict";
+
+var _upload = _dereq_("./upload");
+
+var _upload2 = _interopRequireDefault(_upload);
+
+var _storage = _dereq_("./storage");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* global window */
+var defaultOptions = _upload2.default.defaultOptions;
+
+
+if (typeof window !== "undefined") {
+  // Browser environment using XMLHttpRequest
+  var _window = window,
+      XMLHttpRequest = _window.XMLHttpRequest,
+      Blob = _window.Blob;
+
+
+  var isSupported = XMLHttpRequest && Blob && typeof Blob.prototype.slice === "function";
+} else {
+  // Node.js environment using http module
+  var isSupported = true;
+}
+
+// The usage of the commonjs exporting syntax instead of the new ECMAScript
+// one is actually inteded and prevents weird behaviour if we are trying to
+// import this module in another module using Babel.
+module.exports = {
+  Upload: _upload2.default,
+  isSupported: isSupported,
+  canStoreURLs: _storage.canStoreURLs,
+  defaultOptions: defaultOptions
+};
+
+},{"./storage":7,"./upload":8}],5:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33,20 +131,19 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function newRequest() {
   return new window.XMLHttpRequest();
 } /* global window */
-
-
 function resolveUrl(origin, link) {
   return (0, _resolveUrl2.default)(origin, link);
 }
 
-},{"resolve-url":10}],3:[function(_dereq_,module,exports){
+},{"resolve-url":10}],6:[function(_dereq_,module,exports){
 "use strict";
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 exports.getSource = getSource;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -84,7 +181,7 @@ function getSource(input) {
   throw new Error("source object may only be an instance of File or Blob in this environment");
 }
 
-},{}],4:[function(_dereq_,module,exports){
+},{}],7:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -131,106 +228,12 @@ function removeItem(key) {
   return localStorage.removeItem(key);
 }
 
-},{}],5:[function(_dereq_,module,exports){
+},{}],8:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var DetailedError = function (_Error) {
-  _inherits(DetailedError, _Error);
-
-  function DetailedError(error) {
-    var causingErr = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
-    var xhr = arguments.length <= 2 || arguments[2] === undefined ? null : arguments[2];
-
-    _classCallCheck(this, DetailedError);
-
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(DetailedError).call(this, error.message));
-
-    _this.originalRequest = xhr;
-    _this.causingError = causingErr;
-
-    var message = error.message;
-    if (causingErr != null) {
-      message += ", caused by " + causingErr.toString();
-    }
-    if (xhr != null) {
-      message += ", originated from request (response code: " + xhr.status + ", response text: " + xhr.responseText + ")";
-    }
-    _this.message = message;
-    return _this;
-  }
-
-  return DetailedError;
-}(Error);
-
-exports.default = DetailedError;
-
-},{}],6:[function(_dereq_,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = fingerprint;
-/**
- * Generate a fingerprint for a file which will be used the store the endpoint
- *
- * @param {File} file
- * @return {String}
- */
-function fingerprint(file) {
-  return ["tus", file.name, file.type, file.size, file.lastModified].join("-");
-}
-
-},{}],7:[function(_dereq_,module,exports){
-"use strict";
-
-var _upload = _dereq_("./upload");
-
-var _upload2 = _interopRequireDefault(_upload);
-
-var _storage = _dereq_("./node/storage");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* global window */
-var defaultOptions = _upload2.default.defaultOptions;
-
-
-if (typeof window !== "undefined") {
-  // Browser environment using XMLHttpRequest
-  var _window = window;
-  var XMLHttpRequest = _window.XMLHttpRequest;
-  var Blob = _window.Blob;
-
-
-  var isSupported = XMLHttpRequest && Blob && typeof Blob.prototype.slice === "function";
-} else {
-  // Node.js environment using http module
-  var isSupported = true;
-}
-
-// The usage of the commonjs exporting syntax instead of the new ECMAScript
-// one is actually inteded and prevents weird behaviour if we are trying to
-// import this module in another module using Babel.
-module.exports = {
-  Upload: _upload2.default,
-  isSupported: isSupported,
-  canStoreURLs: _storage.canStoreURLs,
-  defaultOptions: defaultOptions
-};
-
-},{"./node/storage":4,"./upload":8}],8:[function(_dereq_,module,exports){
-"use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /* global window */
 
@@ -238,10 +241,6 @@ var _createClass = function () { function defineProperties(target, props) { for 
 // We import the files used inside the Node environment which are rewritten
 // for browsers using the rules defined in the package.json
 
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
 
 var _fingerprint = _dereq_("./fingerprint");
 
@@ -255,15 +254,15 @@ var _extend = _dereq_("extend");
 
 var _extend2 = _interopRequireDefault(_extend);
 
-var _request = _dereq_("./node/request");
+var _request = _dereq_("./request");
 
-var _source = _dereq_("./node/source");
+var _source = _dereq_("./source");
 
-var _base = _dereq_("./node/base64");
+var _base = _dereq_("./base64");
 
 var Base64 = _interopRequireWildcard(_base);
 
-var _storage = _dereq_("./node/storage");
+var _storage = _dereq_("./storage");
 
 var Storage = _interopRequireWildcard(_storage);
 
@@ -361,15 +360,15 @@ var Upload = function () {
 
         this._size = size;
       } else {
-        var size = source.size;
+        var _size = source.size;
 
         // The size property will be null if we cannot calculate the file's size,
         // for example if you handle a stream.
-        if (size == null) {
+        if (_size == null) {
           throw new Error("tus: cannot automatically derive upload's size from input and must be specified manually using the `uploadSize` option");
         }
 
-        this._size = size;
+        this._size = _size;
       }
 
       var retryDelays = this.options.retryDelays;
@@ -377,47 +376,45 @@ var Upload = function () {
         if (Object.prototype.toString.call(retryDelays) !== "[object Array]") {
           throw new Error("tus: the `retryDelays` option must either be an array or null");
         } else {
-          (function () {
-            var errorCallback = _this.options.onError;
-            _this.options.onError = function (err) {
-              // Restore the original error callback which may have been set.
-              _this.options.onError = errorCallback;
+          var errorCallback = this.options.onError;
+          this.options.onError = function (err) {
+            // Restore the original error callback which may have been set.
+            _this.options.onError = errorCallback;
 
-              // We will reset the attempt counter if
-              // - we were already able to connect to the server (offset != null) and
-              // - we were able to upload a small chunk of data to the server
-              var shouldResetDelays = _this._offset != null && _this._offset > _this._offsetBeforeRetry;
-              if (shouldResetDelays) {
-                _this._retryAttempt = 0;
-              }
+            // We will reset the attempt counter if
+            // - we were already able to connect to the server (offset != null) and
+            // - we were able to upload a small chunk of data to the server
+            var shouldResetDelays = _this._offset != null && _this._offset > _this._offsetBeforeRetry;
+            if (shouldResetDelays) {
+              _this._retryAttempt = 0;
+            }
 
-              var isOnline = true;
-              if (typeof window !== "undefined" && "navigator" in window && window.navigator.onLine === false) {
-                isOnline = false;
-              }
+            var isOnline = true;
+            if (typeof window !== "undefined" && "navigator" in window && window.navigator.onLine === false) {
+              isOnline = false;
+            }
 
-              // We only attempt a retry if
-              // - we didn't exceed the maxium number of retries, yet, and
-              // - this error was caused by a request or it's response and
-              // - the error is not a client error (status 4xx) and
-              // - the browser does not indicate that we are offline
-              var shouldRetry = _this._retryAttempt < retryDelays.length && err.originalRequest != null && !inStatusCategory(err.originalRequest.status, 400) && isOnline;
+            // We only attempt a retry if
+            // - we didn't exceed the maxium number of retries, yet, and
+            // - this error was caused by a request or it's response and
+            // - the error is not a client error (status 4xx) and
+            // - the browser does not indicate that we are offline
+            var shouldRetry = _this._retryAttempt < retryDelays.length && err.originalRequest != null && !inStatusCategory(err.originalRequest.status, 400) && isOnline;
 
-              if (!shouldRetry) {
-                _this._emitError(err);
-                return;
-              }
+            if (!shouldRetry) {
+              _this._emitError(err);
+              return;
+            }
 
-              var delay = retryDelays[_this._retryAttempt++];
+            var delay = retryDelays[_this._retryAttempt++];
 
-              _this._offsetBeforeRetry = _this._offset;
-              _this.options.uploadUrl = _this.url;
+            _this._offsetBeforeRetry = _this._offset;
+            _this.options.uploadUrl = _this.url;
 
-              _this._retryTimeout = setTimeout(function () {
-                _this.start();
-              }, delay);
-            };
-          })();
+            _this._retryTimeout = setTimeout(function () {
+              _this.start();
+            }, delay);
+          };
         }
       }
 
@@ -794,7 +791,7 @@ Upload.defaultOptions = defaultOptions;
 
 exports.default = Upload;
 
-},{"./error":5,"./fingerprint":6,"./node/base64":1,"./node/request":2,"./node/source":3,"./node/storage":4,"extend":9}],9:[function(_dereq_,module,exports){
+},{"./base64":1,"./error":2,"./fingerprint":3,"./request":5,"./source":6,"./storage":7,"extend":9}],9:[function(_dereq_,module,exports){
 'use strict';
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -823,17 +820,17 @@ var isPlainObject = function isPlainObject(obj) {
 	// Own properties are enumerated firstly, so to speed up,
 	// if last one is own, then all properties are own.
 	var key;
-	for (key in obj) {/**/}
+	for (key in obj) { /**/ }
 
 	return typeof key === 'undefined' || hasOwn.call(obj, key);
 };
 
 module.exports = function extend() {
-	var options, name, src, copy, copyIsArray, clone,
-		target = arguments[0],
-		i = 1,
-		length = arguments.length,
-		deep = false;
+	var options, name, src, copy, copyIsArray, clone;
+	var target = arguments[0];
+	var i = 1;
+	var length = arguments.length;
+	var deep = false;
 
 	// Handle a deep copy situation
 	if (typeof target === 'boolean') {
@@ -841,7 +838,8 @@ module.exports = function extend() {
 		target = arguments[1] || {};
 		// skip the boolean and the target
 		i = 2;
-	} else if ((typeof target !== 'object' && typeof target !== 'function') || target == null) {
+	}
+	if (target == null || (typeof target !== 'object' && typeof target !== 'function')) {
 		target = {};
 	}
 
@@ -880,7 +878,6 @@ module.exports = function extend() {
 	// Return the modified object
 	return target;
 };
-
 
 },{}],10:[function(_dereq_,module,exports){
 // Copyright 2014 Simon Lydell
@@ -931,6 +928,6 @@ void (function(root, factory) {
 
 }));
 
-},{}]},{},[7])(7)
+},{}]},{},[4])(4)
 });
 //# sourceMappingURL=tus.js.map
