@@ -348,7 +348,6 @@ var Upload = function () {
       var ws = new WebSocket("ws://" + this.options.wsendpoint + "/ws");
 
       ws.onopen = function () {
-        console.log("[WS Opened]");
 
         var payload = {
           method: "POST",
@@ -357,7 +356,7 @@ var Upload = function () {
 
         var headers = {
           "Tus-Resumable": "1.0.0",
-          "Upload-Length": _this2._size
+          "Upload-Length": _this2._size.toString()
         };
 
         var metadata = encodeMetadata(_this2.options.metadata);
@@ -371,7 +370,6 @@ var Upload = function () {
         }
 
         payload.headers = headers;
-        console.log("Create payload: ", payload);
 
         ws.send(JSON.stringify(payload));
       };
@@ -391,15 +389,13 @@ var Upload = function () {
       ws.onmessage = function (message) {
         var response = JSON.parse(message.data);
 
-        console.log("[WS Message]", response);
-
         if (!inStatusCategory(response.status, 200)) {
           // MUST _emitXhrError (_emitWsError)
           _this2._emitError(new Error("tus: unexpected response while creating upload"));
           return;
         }
 
-        _this2.url = (0, _request.resolveUrl)(_this2.options.endpoint, response.headers["Location"]);
+        _this2.url = response.headers["Location"];
 
         if (_this2.options.resume) {
           Storage.setItem(_this2._fingerprint, _this2.url);
