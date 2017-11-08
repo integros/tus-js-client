@@ -3,6 +3,7 @@ services:
   web:
     build: .
     volumes: 
-      - .:/var/www/tus
+      - ./demo:/var/www/tus
+      - ./dist:/var/www/tus/dist
     ports:
-      - 8086:80
+      - 8086:8080

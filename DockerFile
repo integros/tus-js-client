@@ -1,3 +1,16 @@
-FROM nginx:alpine
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY . /var/www/tus
+FROM node:alpine
+
+RUN npm install http-server -g
+
+RUN mkdir -p /var/www/tus
+
+COPY /demo/ /var/www/tus/
+COPY /dist/ /var/www/tus/dist/
+
+WORKDIR /var/www/tus
+
+RUN ls -al /var/www/tus
+
+EXPOSE 8080
+
+CMD ["http-server", "/var/www/tus"]
